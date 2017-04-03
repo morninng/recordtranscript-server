@@ -1,0 +1,11 @@
+  node recognize.js async-gcs gs://nodetest-moriyama/-KenG8GvGpMwTWFRF_rZ/-KenG8GvGpMwTWFRF_rZ_NA_LOR_1491057804711.raw -e LINEAR16 -r 44100
+
+  node recognize.js async-gcs gs://my-bucket/audio.raw -e LINEAR16 -r 44100
+
+
+   sox -r 44100 -e signed-integer -b 16 -c 1   "test.raw" "test.wav"
+
+
+  -KenG8GvGpMwTWFRF_rZ_NA_MO_1491057235508.raw
+
+    node recognize.js async-gcs gs://nodetest-moriyama/-KenG8GvGpMwTWFRF_rZ/sawako.raw -e LINEAR16 -r 44100
