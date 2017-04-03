@@ -12,13 +12,19 @@ const firebase_admin = require("firebase-admin");
 const serviceAccount = require("./secret/mixidea-91a20-firebase-adminsdk.json");
 const config = require('./config/mixidea.conf');
 
+firebase_admin.initializeApp({
+  credential: firebase_admin.credential.cert("secret/mixidea-91a20-firebase-adminsdk.json"),
+  databaseURL: "https://mixidea-91a20.firebaseio.com"
+});
+
 const gcs = require('@google-cloud/storage')({
   projectId: 'grape-spaceship-123',
   keyFilename: './secret/cloud-function-test-192f31cb3070.json'
 });
 
  const bucket = gcs.bucket('nodetest-moriyama');
- const bucket_path = "gs://nodetest-moriyama/"
+ const bucket_path = "gs://nodetest-moriyama/";
+
  
 
 const serverPort = 3000;
@@ -120,7 +126,8 @@ function execute_recognition(data){
         const sample_rate = data.sample_rate || 44100;
         const outfile_name  = data.filename;
         const event_id = data.event_id;
-        asyncRecognizeGCS( bucket_path + "raw/" + event_id + "/" + role + "__" + speech_id + "/" + short_split_id + '.raw','LINEAR16',  sample_rate);
+        const gcsUri = bucket_path + "raw/" + event_id + "/" + role + "__" + speech_id + "/" + short_split_id + '.raw'
+        asyncRecognizeGCS(gcsUri ,'LINEAR16',  sample_rate, data);
       },
       10*1000 + each_speech_duration * 2
     )
@@ -136,7 +143,7 @@ function concatenate_audiofile(){
 // sample is here.
 // https://github.com/GoogleCloudPlatform/nodejs-docs-samples/tree/master/speech
 
-function asyncRecognizeGCS (gcsUri, encoding, sampleRate) {
+function asyncRecognizeGCS (gcsUri, encoding, sampleRate, data) {
 
   console.log("asyncRecognizeGCS start", gcsUri);
   const Speech = require('@google-cloud/speech');
@@ -153,12 +160,44 @@ function asyncRecognizeGCS (gcsUri, encoding, sampleRate) {
     })
     .then((transcription) => {
       console.log(`Transcription: ${transcription}`);
-      save_transcription();
+      if(transcription && transcription[0]){
+        save_transcription(transcription[0], data);
+      }
+      
     });
 }
 
 
-function save_transcription(){
+function save_transcription(transcription, data){
   console.log("save_transcription");
+
+  const event_id = data.event_id;
+  const role = data.role;
+  const speech_id = data.speech_id;
+  const deb_style = data.deb_style;
+  const short_split_id = data.short_split_id;
+  const user = data.short_split_id;
+  const speech_type = data.speech_type
+
+  const transcript_obj = {
+    context: transcription,
+    user,
+    speech_type
+  }
+
+  var child_path = "event_related/audio_transcriptserver/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/spech_context/" + short_split_id;
+	console.log(child_path);
+  const database = firebase_admin.database();
+  
+  database.ref(child_path).set(transcript_obj, (error)=>{
+		if (error) {
+			console.log("saving transcription on firabase failed");
+		} else {
+			console.log("saving transcription on firebase succeedevent id ");
+		}
+  });
+
 }
+
+
 
