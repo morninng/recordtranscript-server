@@ -2,6 +2,7 @@
 /secret
 /config
 
+
 *.raw
 *.wav
 *.mp3
