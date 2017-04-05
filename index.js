@@ -37,21 +37,11 @@ const server = httpServer.listen(serverPort,  serverHost, ()=> {
 });
 
 
-test = 0;
-test_socket_count = 0;
-GlobalInfo = {}
 
 app.get('/', (req, res)=> {
   console.log('root is called'); 
   res.send('Hello World recording server!');
 });
-
-
-app.get('/test', (req, res)=> {
-  save_test()
-  res.send('test');
-});
-
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(function(req, res, next) {
@@ -60,12 +50,13 @@ app.use(function(req, res, next) {
   next();
 });
 
+const translate = require("./routes/translate");
+const client_log = require("./routes/client_log");
+const date_retrieve = require("./routes/date_retrieve");
+app.use('/translate', translate);
+app.use('/client_log', client_log);
+app.use('/date_retrieve', date_retrieve);
 
-//const client_log = require("./routes/client_log");
-//const date_retrieve = require("./routes/date_retrieve");
-//app.use('/translate', translate);
-//app.use('/client_log', client_log);
-//app.use('/date_retrieve', date_retrieve);
 
 
 
@@ -151,18 +142,18 @@ function get_remote_file_name_used(event_id, role, speech_id, short_split_id){
 }
 
 function get_local_filename_raw(event_id , short_split_id){
-  return './public/'+ event_id + "/" + short_split_id + '.raw';
+  return './public/audio/'+ event_id + "/" + short_split_id + '.raw';
 }
 function get_local_filename_wav(event_id , short_split_id){
-  return './public/'+ event_id + "/" + short_split_id + '.wav';
+  return './public/audio/'+ event_id + "/" + short_split_id + '.wav';
 }
 
 function get_local_filename_mp3(event_id, speech_id){
-  return './public/' + event_id + "/"  + speech_id + '.mp3';
+  return './public/audio/' + event_id + "/"  + speech_id + '.mp3';
 }
 
 function get_local_folder(event_id){
-  return './public/' + event_id;
+  return './public/audio/' + event_id;
 }
 
 

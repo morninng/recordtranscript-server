@@ -1,0 +1,12 @@
+
+
+ssh -i "/home/morninng/.ssh/mixidea_key.pem" ubuntu@ec2-54-144-39-186.compute-1.amazonaws.com
+
+sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='logs/*'　--exclude='public/*/*' /home/morninng/development/nodejs/recordtranscript-server/* ubuntu@ec2-54-144-39-186.compute-1.amazonaws.com:/home/ubuntu/source_servertranscript
+
+
+
+
+sudo apt-get install sox
+sudo apt-get install sox libsox-fmt-all
+sudo apt-get install libsox-fmt-mp3
