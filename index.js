@@ -21,19 +21,17 @@ firebase_admin.initializeApp({
 
 
 
-const serverPort = 3000;
-//const serverPort = 80;
+//const serverPort = 3000;
+const serverPort = 80;
 const serverHost = "127.0.0.1";
 
 const app = express();
-//const httpServer = https.createServer(credentials,app);
 const httpServer = http.createServer(app);
-const server = httpServer.listen(serverPort,  serverHost, ()=> {
-//const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
+// const server = httpServer.listen(serverPort,  serverHost, ()=> {
+ const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
   var host = server.address().address;
   var port = server.address().port;
   console.log('Example app listening at http://%s:%s', host, port);
-//  loggerRequest.info('Example app listening at http://%s:%s', host, port);
 });
 
 
@@ -83,31 +81,47 @@ mixidea_io.on('connection',(socket)=>{
       const role = data.role;
       const speech_id = data.speech_id;
       const short_split_id = data.short_split_id;
-			console.log("audio record start socket id=" + socket.id + "event_id: " + event_id );
+			console.log("audio record start socket id=" + socket.id + " data: ", data );
       const remote_file_name = get_remote_file_name_raw(event_id, role, speech_id, short_split_id);
       var remoteWriteStream = bucket_raw.file(remote_file_name).createWriteStream();
       stream.pipe(remoteWriteStream);
 
+      save_startdata(data);
 	});
 
   socket.on('record_suspend', function(data){
-    console.log("audio record end socket id=" + socket.id);
-    execute_recognition(data);
+    console.log("audio record suspend socket id=" + socket.id + " data", data);
+
+    const each_speech_duration = Number(data.each_speech_duration);
+    console.log("execute_recognition is called and wait  each_speech_duration", each_speech_duration)
+    setTimeout(
+      ()=>{
+        execute_recognition(data);
+      },
+      30*1000 + each_speech_duration*2
+    )
 
   });
 
 
   socket.on('record_finish', function(data){
-    console.log("audio record end socket id=" + socket.id);
-    execute_recognition(data);
+    console.log("audio record end socket id=" + socket.id + " data", data);
+
+    const each_speech_duration = Number(data.each_speech_duration);
+    console.log("execute_recognition is called and wait  each_speech_duration", each_speech_duration)
+    setTimeout(
+      ()=>{
+        execute_recognition(data);
+      },
+      30*1000 + each_speech_duration*2
+    )
 
     const whole_speech_duration = Number(data.whole_speech_duration);
     console.log("whole_speech_duration", whole_speech_duration);
-    
     setTimeout(()=>{
         concatenate_audiofile(data);
       }
-      ,whole_speech_duration*2 +20*1000
+      ,whole_speech_duration*3 +90*1000
     );
 
   });
@@ -123,6 +137,7 @@ const gcs = require('@google-cloud/storage')({
 
  const bucket_raw = gcs.bucket('mixidea-audio-raw');
  const bucket_raw_path = "gs://mixidea-audio-raw/";
+ const bucket_used_name = 'mixidea-audio-used';
  const bucket_used = gcs.bucket('mixidea-audio-used');
  const bucket_used_path = "gs://mixidea-audio-used/";
 
@@ -137,9 +152,17 @@ function get_remote_file_path_raw(event_id, role, speech_id, short_split_id){
   return   bucket_raw_path + get_remote_file_name_raw(event_id, role, speech_id, short_split_id);
 }
 
-function get_remote_file_name_used(event_id, role, speech_id, short_split_id){
+function get_remote_file_name_used(event_id, role, speech_id){
   return  event_id + "/" + role + "__" + speech_id +  '.mp3';
 }
+
+
+function get_remote_file_name_used_storageurl(event_id, role, speech_id){
+  const remote_filename = get_remote_file_name_used(event_id, role, speech_id);
+  return  "https://storage.googleapis.com/" + bucket_used_name + "/" + remote_filename;
+}
+
+
 
 function get_local_filename_raw(event_id , short_split_id){
   return './public/audio/'+ event_id + "/" + short_split_id + '.raw';
@@ -157,25 +180,37 @@ function get_local_folder(event_id){
 }
 
 
+function get_firebasepath_speechcontext(event_id, deb_style, role, speech_id){
+  return "event_related/audio_transcriptserver/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/spech_context/"
+}
+function get_firebasepath_audio(event_id, deb_style, role, speech_id){
+  return "event_related/audio_transcriptserver/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/audio/"
+}
+
+function get_firebasepath_shortsplitid(event_id, deb_style, role, speech_id, short_split_id){
+
+  const speechcontext_path = get_firebasepath_speechcontext(event_id, deb_style, role, speech_id);
+  return speechcontext_path + short_split_id + "/";
+}
+
+function get_firebasepath_duration_wav(event_id, deb_style, role, speech_id, short_split_id){
+
+  const shortsplitid_path = get_firebasepath_shortsplitid(event_id, deb_style, role, speech_id, short_split_id)
+  return shortsplitid_path + "duration_wav";
+}
+
 
 function execute_recognition(data){
 
+    const sample_rate = data.sample_rate || 44100;
     const event_id = data.event_id;
     const role = data.role;
     const speech_id = data.speech_id;
     const short_split_id = data.short_split_id;
-    const each_speech_duration = Number(data.each_speech_duration);
+    console.log("finish waiting and start recognition of short split id", short_split_id);
+    const gcsUri = get_remote_file_path_raw(event_id, role, speech_id, short_split_id);
+    asyncRecognizeGCS(gcsUri ,'LINEAR16',  sample_rate, data);
 
-    setTimeout(
-      ()=>{
-        const sample_rate = data.sample_rate || 44100;
-        const outfile_name  = data.filename;
-        const event_id = data.event_id;
-        const gcsUri = get_remote_file_path_raw(event_id, role, speech_id, short_split_id);
-        asyncRecognizeGCS(gcsUri ,'LINEAR16',  sample_rate, data);
-      },
-      3*1000 + each_speech_duration
-    )
 }
 
 
@@ -187,13 +222,16 @@ function execute_recognition(data){
 
 function asyncRecognizeGCS (gcsUri, encoding, sampleRate, data) {
 
-  console.log("asyncRecognizeGCS start", gcsUri);
+
+  const speech_id = data.speech_id;
+  console.log("----asyncRecognizeGCS start-----", speech_id);
   const Speech = require('@google-cloud/speech');
   const speech = Speech();
   const request = {
     encoding: encoding,
     sampleRate: sampleRate
   };
+  console.log("recognition request parameter", request);
 
   speech.startRecognition(gcsUri, request)
     .then((results) => {
@@ -210,6 +248,38 @@ function asyncRecognizeGCS (gcsUri, encoding, sampleRate, data) {
 }
 
 
+function save_startdata(data){
+
+  const event_id = data.event_id;
+  const role = data.role;
+  const speech_id = data.speech_id;
+  const deb_style = data.deb_style;
+  const short_split_id = data.short_split_id;
+  const user = data.user;
+  const speech_type = data.speech_type;
+  const sample_rate = data.sample_rate;
+
+  const startdata_obj = {
+    user,
+    speech_type,
+    sample_rate
+  }
+
+  const shortsplitid_path = get_firebasepath_shortsplitid(event_id, deb_style, role, speech_id, short_split_id)
+	console.log(shortsplitid_path);
+
+  const database = firebase_admin.database();
+  database.ref(shortsplitid_path).set(startdata_obj, (error)=>{
+		if (error) {
+			console.log("saving startdata_obj on firabase failed shortsplit id", short_split_id);
+		} else {
+			console.log("saving startdata_obj on firebase succeed shortsplit id", short_split_id);
+		}
+  });
+
+}
+
+
 function save_transcription(transcription, data){
   console.log("save_transcription");
 
@@ -218,33 +288,35 @@ function save_transcription(transcription, data){
   const speech_id = data.speech_id;
   const deb_style = data.deb_style;
   const short_split_id = data.short_split_id;
-  const user = data.short_split_id;
+  const user = data.user;
   const speech_type = data.speech_type;
   const sample_rate = data.sample_rate;
+  const each_speech_duration = data.each_speech_duration
 
   const transcript_obj = {
     context: transcription,
     user,
     speech_type,
-    sample_rate
+    sample_rate,
+    duration_client: each_speech_duration
   }
 
-  var child_path = "event_related/audio_transcriptserver/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/spech_context/" + short_split_id;
-	console.log(child_path);
+  const shortsplitid_path = get_firebasepath_shortsplitid(event_id, deb_style, role, speech_id, short_split_id)
+	console.log(shortsplitid_path);
+
   const database = firebase_admin.database();
-  
-  database.ref(child_path).set(transcript_obj, (error)=>{
+  database.ref(shortsplitid_path).set(transcript_obj, (error)=>{
 		if (error) {
-			console.log("saving transcription on firabase failed");
+			console.log("saving transcription on firabase failed shortsplit id", short_split_id);
 		} else {
-			console.log("saving transcription on firebase succeedevent id ");
+			console.log("saving transcription on firebase succeed shortsplit id", short_split_id);
 		}
   });
 
 }
 
 function concatenate_audiofile(data){
-    console.log("concatenate audoi file is called");
+    console.log("/////////concatenate audoi file start//////////");
     const event_id = data.event_id;
     const role = data.role;
     const deb_style = data.deb_style;
@@ -252,17 +324,20 @@ function concatenate_audiofile(data){
     const dirname = get_local_folder(event_id)
     mkdirp(dirname);
 
-    const firebase_child_path = "event_related/audio_transcriptserver/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/spech_context/";
+    const speechcontext_path = get_firebasepath_speechcontext(event_id, deb_style, role, speech_id);
+    console.log("speechcontext_path", speechcontext_path);
 
     const database = firebase_admin.database();
-    database.ref(firebase_child_path).once("value", (snapshot) => {
+    database.ref(speechcontext_path).once("value", (snapshot) => {
       console.log("audio_transcriptserver", snapshot.val());
       const audiotranscript_obj = snapshot.val();
       let numbe_of_speech = 0;
       let speech_downloaded = 0;
       let downloaded_shortsplitid_arr = [];
+      let all_shortsplited_arr = [];
       for(let key in audiotranscript_obj){
         let short_split_id = key;
+        all_shortsplited_arr.push(short_split_id);
         let sample_rate = audiotranscript_obj[key].sample_rate;
         let remote_file_name_raw = get_remote_file_name_raw(event_id, role, speech_id, short_split_id);
         console.log(remote_file_name_raw);
@@ -273,6 +348,7 @@ function concatenate_audiofile(data){
         }, (err)=> {
           speech_downloaded++;
           if(!err){
+            console.log("download data succeed for ", short_split_id)
             downloaded_shortsplitid_arr.push(short_split_id);
             convert_rawfile_to_unique_samplinrate_wav( data, short_split_id, sample_rate );
           }else{
@@ -280,7 +356,11 @@ function concatenate_audiofile(data){
           }
           if(numbe_of_speech == speech_downloaded){
             setTimeout(()=>{
-              wavconcatenate_convertmp3(data, downloaded_shortsplitid_arr)     
+              const downloaded_ordered_shortspilitid = all_shortsplited_arr.filter((elem)=>{ return downloaded_shortsplitid_arr.indexOf(elem) != -1})
+              console.log("all_shortsplited_arr",all_shortsplited_arr);
+              console.log("downloaded_shortsplitid_arr",downloaded_shortsplitid_arr);
+              console.log("downloaded_ordered_shortspilitid",downloaded_ordered_shortspilitid);
+              wavconcatenate_convertmp3(data, downloaded_ordered_shortspilitid)     
             },20*1000)
           }
         });
@@ -319,36 +399,50 @@ const convert_rawfile_to_unique_samplinrate_wav = function(data, short_split_id,
 function set_speech_duration(data, short_split_id){
 
     const event_id = data.event_id;
-    const role = data.role;
-    const deb_style = data.deb_style;
-    const speech_id = data.speech_id;
-    const firebase_child_path_duration = "event_related/audio_transcriptserver/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/spech_context/" + short_split_id + "/duration";
     const file_name = get_local_filename_wav(event_id, short_split_id);
 
     wavFileInfo.infoByFilename(file_name, function(err, info){
+      let duration = 10;
       if (!err){
-        //save duration to firebase
-        console.log(info)
-        duration = info.duration || 10;
-        console.log(duration);
-      }else{
-        console.log("retrieving file info failed", err);
-        duration = 10;
-      }
-
-      const database = firebase_admin.database();
-      database.ref(firebase_child_path_duration).set(duration, (error)=>{
-        if (error) {
-          console.log("saving duration on firabase failed");
-        } else {
-          console.log("saving duration on firebase succeedevent");
+        console.log("retrieving file info succeeded!!");
+        if(info && info.duration){
+          save_duration(data,short_split_id ,info.duration)
         }
-      });
+      }else{
+        console.log("retrieving file info failed!!!!!!!!!");
+      }
     });
 }
 
 
-function wavconcatenate_convertmp3(data, downloaded_shortsplitid_arr){
+function save_duration(data,short_split_id,duration){
+
+
+    const event_id = data.event_id;
+    const role = data.role;
+    const deb_style = data.deb_style;
+    const speech_id = data.speech_id;
+
+    console.log("duration-wav",duration );
+
+    const wavduration_path = get_firebasepath_duration_wav(event_id, deb_style, role, speech_id, short_split_id);
+    console.log("wavduration_path", wavduration_path)
+
+    const database = firebase_admin.database();
+    database.ref(wavduration_path).set(duration, (error)=>{
+      if (error) {
+        console.log("saving duration on firabase failed");
+      } else {
+        console.log("saving duration on firebase succeed");
+      }
+    });
+
+}
+
+
+
+
+function wavconcatenate_convertmp3(data, downloaded_ordered_shortspilitid){
 
   const event_id = data.event_id;
   const role = data.role;
@@ -360,7 +454,7 @@ function wavconcatenate_convertmp3(data, downloaded_shortsplitid_arr){
 	const wstream = fs.createWriteStream(dest_file);
 	const command = SoxCommand().output(wstream).outputFileType('mp3');
 
-	downloaded_shortsplitid_arr.forEach(
+	downloaded_ordered_shortspilitid.forEach(
     (short_split_id)=>{
       const each_file_name = get_local_filename_wav(event_id, short_split_id);
       console.log("each_file_name", each_file_name);
@@ -378,7 +472,8 @@ function wavconcatenate_convertmp3(data, downloaded_shortsplitid_arr){
 	 
 	command.on('end', ()=> {
 		console.log('transcode and connecting audio succeeded!');
-    save_file(data)
+    save_file_on_googlestorage(data);
+
 		wstream.end();
 
 	});
@@ -386,23 +481,48 @@ function wavconcatenate_convertmp3(data, downloaded_shortsplitid_arr){
 }
 
 
-
-function save_file(data){
-
+function save_file_on_googlestorage(data){
   const event_id = data.event_id;
   const speech_id = data.speech_id;
   const role = data.role;
 
 	const local_file = get_local_filename_mp3(event_id, speech_id);
   const remote_file = get_remote_file_name_used(event_id, role, speech_id);
+  console.log("remote_file", remote_file);
+  console.log("///////////saving mp3 file to cloud storage started////////////");
 
   const localReadStream = fs.createReadStream(local_file);
   const remoteWriteStream = bucket_used.file(remote_file).createWriteStream();
   localReadStream.pipe(remoteWriteStream);
 
+  save_fileinfo_firebase(data);
+
 }
 
 
+function save_fileinfo_firebase(data){
 
+  const event_id = data.event_id;
+  const role = data.role;
+  const deb_style = data.deb_style;
+  const speech_id = data.speech_id;
+
+  const storage_url = get_remote_file_name_used_storageurl(event_id, role, speech_id);
+  console.log(storage_url);
+  const audio_path = get_firebasepath_audio(event_id, deb_style, role, speech_id)
+  console.log(audio_path);
+
+
+  const database = firebase_admin.database();
+  database.ref(audio_path).set(storage_url, (error)=>{
+    if (error) {
+      console.log("saving audio ufl on firabase failed");
+    } else {
+      console.log("saving audio ufl  on firebase succeed");
+    }
+  });
+
+
+}
 
 

@@ -1,12 +1,35 @@
 
-
+recording server
 ssh -i "/home/morninng/.ssh/mixidea_key.pem" ubuntu@ec2-54-144-39-186.compute-1.amazonaws.com
+recordtranscript server
+ssh -i "/home/morninng/.ssh/mixidea_key.pem" ubuntu@ec2-34-205-225-82.compute-1.amazonaws.com
+
 
 sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='logs/*'　--exclude='public/*/*' /home/morninng/development/nodejs/recordtranscript-server/* ubuntu@ec2-54-144-39-186.compute-1.amazonaws.com:/home/ubuntu/source_servertranscript
 
+sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='public/log/*' --exclude='public/audio/*'　--exclude='public/audio/*/*' /home/morninng/development/nodejs/recordtranscript-server/* ubuntu@ec2-34-205-225-82.compute-1.amazonaws.com:/home/ubuntu/source
 
 
 
 sudo apt-get install sox
-sudo apt-get install sox libsox-fmt-all
+sudo apt-get install sox libsox-fmt-allz
 sudo apt-get install libsox-fmt-mp3
+
+
+export GOOGLE_APPLICATION_CREDENTIALS=/home/ubuntu/source/secret/cloud-function-test-192f31cb3070.json
+
+http://qiita.com/pink/items/73e712345cfabaef31e8
+https://developers.google.com/identity/protocols/application-default-credentials
+https://cloud.google.com/docs/authentication
+Service running on-premises
+
+
+
+bucketの設定変更
+https://cloud.google.com/storage/docs/gsutil/commands/defacl
+https://cloud.google.com/storage/docs/access-control/create-manage-lists#storage-set-acls-nodejs
+
+現在のアクセスコントロールの設定を確認
+gsutil defacl get gs://mixidea-audio-used
+公開設定にする。
+gsutil defacl ch -u AllUsers:R gs://mixidea-audio-used
