@@ -22,24 +22,24 @@ app.use(function(req, res, next) {
 const translate = require("./routes/translate");
 const client_log = require("./routes/client_log");
 const date_retrieve = require("./routes/date_retrieve");
-// const record_recognition_route = require("./routes/record_recognition");
+const record_recognition_route = require("./routes/record_recognition");
 const record_recognition_lib = require("./lib/record_recognition");
 
 app.use('/translate', translate);
 app.use('/client_log', client_log);
 app.use('/date_retrieve', date_retrieve);
-app.use('/record_recognition', date_retrieve);
+app.use('/record_recognition', record_recognition_route);
 
 const loggerRequest = require("./lib/logger");
 
 
-const serverPort = 3000;
-//const serverPort = 80;
-const serverHost = "127.0.0.1";
+//const serverPort = 3000;
+const serverPort = 80;
+//const serverHost = "127.0.0.1";
 
 const httpServer = http.createServer(app);
- const server = httpServer.listen(serverPort,  serverHost, ()=> {
-// const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
+// const server = httpServer.listen(serverPort,  serverHost, ()=> {
+ const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
   var host = server.address().address;
   var port = server.address().port;
   console.log('Example app listening at http://%s:%s', host, port);
@@ -69,18 +69,6 @@ mixidea_io.on('connection',(socket)=>{
       loggerRequest.info("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
 	});
 
-  socket.on('record_suspend', function(data){
-    record_recognition_lib.record_suspend(data);
-    console.log("<<socket: record_suspend>>audio record suspend socket id=" + socket.id + " data", data);
-    loggerRequest.info("<<socket: record_suspend>>audio record suspend socket id=" + socket.id + " data", data);
-  });
-
-  socket.on('record_finish', function(data){
-    record_recognition_lib.record_finish(data);
-    console.log("<<socket: record_finish>>audio record end socket id=" + socket.id + " data", data);
-    loggerRequest.info("<<socket: record_finish>>audio record end socket id=" + socket.id + " data", data);
-  });
-  
 })
 
 
