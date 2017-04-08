@@ -1,9 +1,11 @@
 
 const express = require('express');
 const path = require('path');
+const https = require('https');
+const http = require('http');
+const ss = require('socket.io-stream');
 
-
-const app = require('./lib/server').app;
+const app = express();
 
 app.get('/', (req, res)=> {
   console.log('root is called'); 
@@ -20,7 +22,9 @@ app.use(function(req, res, next) {
 const translate = require("./routes/translate");
 const client_log = require("./routes/client_log");
 const date_retrieve = require("./routes/date_retrieve");
-const record_recognition = require("./routes/record_recognition");
+// const record_recognition_route = require("./routes/record_recognition");
+const record_recognition_lib = require("./lib/record_recognition");
+
 app.use('/translate', translate);
 app.use('/client_log', client_log);
 app.use('/date_retrieve', date_retrieve);
@@ -29,7 +33,55 @@ app.use('/record_recognition', date_retrieve);
 const loggerRequest = require("./lib/logger");
 
 
+const serverPort = 3000;
+//const serverPort = 80;
+const serverHost = "127.0.0.1";
 
+const httpServer = http.createServer(app);
+ const server = httpServer.listen(serverPort,  serverHost, ()=> {
+// const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
+  var host = server.address().address;
+  var port = server.address().port;
+  console.log('Example app listening at http://%s:%s', host, port);
+});
+
+
+
+
+const io = require('socket.io').listen(server);
+io.sockets.setMaxListeners(Infinity);
+
+const mixidea_io = io.of('/mixidea')
+
+mixidea_io.on('connection',(socket)=>{
+  console.log("<<socket: connection>>user connect to mixidea io : ", socket.id);
+  loggerRequest.info("<<socket: connection>>user connect to mixidea io : ", socket.id);
+
+
+  socket.on('disconnect', function(){
+    console.log("<<socket: disconnect>>user disconnected socket id=" + socket.id);
+    loggerRequest.info("<<socket: disconnect>>user disconnected socket id=" + socket.id);
+  });
+
+	ss(socket).on('record_start_or_resume', (stream, data)=>{
+      record_recognition_lib.record_start_or_resume(stream, data);
+      console.log("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
+      loggerRequest.info("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
+	});
+
+  socket.on('record_suspend', function(data){
+    record_recognition_lib.record_suspend(data);
+    console.log("<<socket: record_suspend>>audio record suspend socket id=" + socket.id + " data", data);
+    loggerRequest.info("<<socket: record_suspend>>audio record suspend socket id=" + socket.id + " data", data);
+  });
+
+  socket.on('record_finish', function(data){
+    record_recognition_lib.record_finish(data);
+    console.log("<<socket: record_finish>>audio record end socket id=" + socket.id + " data", data);
+    loggerRequest.info("<<socket: record_finish>>audio record end socket id=" + socket.id + " data", data);
+  });
+  
+})
 
 
 
