@@ -5,6 +5,7 @@ const https = require('https');
 const http = require('http');
 const ss = require('socket.io-stream');
 
+const config = require('./config/mixidea.conf');
 const app = express();
 
 app.get('/', (req, res)=> {
@@ -48,6 +49,14 @@ const httpServer = http.createServer(app);
 
 
 
+const gcs = require('@google-cloud/storage')({
+  projectId: 'grape-spaceship-123',
+  keyFilename: './secret/cloud-function-test-192f31cb3070.json'
+});
+ const bucket_raw = gcs.bucket(config.rawfile_bucketname);
+
+
+
 const io = require('socket.io').listen(server);
 io.sockets.setMaxListeners(Infinity);
 
@@ -64,9 +73,27 @@ mixidea_io.on('connection',(socket)=>{
   });
 
 	ss(socket).on('record_start_or_resume', (stream, data)=>{
-      record_recognition_lib.record_start_or_resume(stream, data);
-      console.log("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
-      loggerRequest.info("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
+
+    stream.setMaxListeners(Infinity);
+    const event_id = data.event_id;
+    const role = data.role;
+    const speech_id = data.speech_id;
+    const short_split_id = data.short_split_id;
+    const remote_file_name = record_recognition.get_remote_file_name_raw(event_id, role, speech_id, short_split_id);
+    var remoteWriteStream = bucket_raw.file(remote_file_name).createWriteStream();
+    remoteWriteStream.on('finish', ()=>{
+      console.log("remoteWriteStream close", data.short_split_id)
+    })
+    stream.pipe(remoteWriteStream);
+    record_recognition.save_startdata(data);
+
+    stream.on('end', ()=>{
+      console.log("stream end", data.short_split_id)
+    })
+
+
+    console.log("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
+    loggerRequest.info("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
 	});
 
 })

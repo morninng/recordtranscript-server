@@ -21,6 +21,7 @@ router.get('/record_suspend', function(req, res, next) {
 
     console.log("<<https: record_suspend>>audio record suspend  data : ", data);
     loggerRequest.info("<<https: record_suspend>>audio record suspend   data : ", data);
+    res.send("record_suspend");
     
 });
 
@@ -40,7 +41,7 @@ router.get('/record_finish', function(req, res, next) {
 
     console.log("<<socket: record_finish>>audio record end  data : ", data);
     loggerRequest.info("<<socket: record_finish>>audio record end  data : ", data);
-
+    res.send("record_finish");
 });
 
 
