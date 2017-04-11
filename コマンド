@@ -7,7 +7,7 @@ ssh -i "/home/morninng/.ssh/mixidea_key.pem" ubuntu@ec2-34-205-225-82.compute-1.
 
 sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='logs/*'　--exclude='public/*/*' /home/morninng/development/nodejs/recordtranscript-server/* ubuntu@ec2-54-144-39-186.compute-1.amazonaws.com:/home/ubuntu/source_servertranscript
 
-sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='public/log/*'  --exclude='public/audio/'　 --exclude='public/audio/*'　--exclude='public/audio/*/*' /home/morninng/development/nodejs/recordtranscript-server/* ubuntu@ec2-34-205-225-82.compute-1.amazonaws.com:/home/ubuntu/source
+sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='public/log/*'  --exclude='**.wav'  --exclude='**.raw' --exclude='**.mp3'  /home/morninng/development/nodejs/recordtranscript-server/* ubuntu@ec2-34-205-225-82.compute-1.amazonaws.com:/home/ubuntu/source
 
 
 

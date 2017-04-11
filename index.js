@@ -34,13 +34,13 @@ app.use('/record_recognition', record_recognition_route);
 const loggerRequest = require("./lib/logger");
 
 
-const serverPort = 3000;
-//const serverPort = 80;
-const serverHost = "127.0.0.1";
+//const serverPort = 3000;
+const serverPort = 80;
+//const serverHost = "127.0.0.1";
 
 const httpServer = http.createServer(app);
- const server = httpServer.listen(serverPort,  serverHost, ()=> {
-// const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
+// const server = httpServer.listen(serverPort,  serverHost, ()=> {
+ const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
   var host = server.address().address;
   var port = server.address().port;
   console.log('Example app listening at http://%s:%s', host, port);
