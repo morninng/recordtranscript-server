@@ -26,6 +26,7 @@ router.get('/record_suspend', function(req, res, next) {
 });
 
 
+
 router.get('/record_finish', function(req, res, next) {
 
     console.log("record_recognition: record_finish");

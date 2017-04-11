@@ -34,13 +34,13 @@ app.use('/record_recognition', record_recognition_route);
 const loggerRequest = require("./lib/logger");
 
 
-//const serverPort = 3000;
-const serverPort = 80;
-//const serverHost = "127.0.0.1";
+const serverPort = 3000;
+//const serverPort = 80;
+const serverHost = "127.0.0.1";
 
 const httpServer = http.createServer(app);
-// const server = httpServer.listen(serverPort,  serverHost, ()=> {
- const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
+ const server = httpServer.listen(serverPort,  serverHost, ()=> {
+// const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
   var host = server.address().address;
   var port = server.address().port;
   console.log('Example app listening at http://%s:%s', host, port);
@@ -74,26 +74,11 @@ mixidea_io.on('connection',(socket)=>{
 
 	ss(socket).on('record_start_or_resume', (stream, data)=>{
 
-    stream.setMaxListeners(Infinity);
-    const event_id = data.event_id;
-    const role = data.role;
-    const speech_id = data.speech_id;
-    const short_split_id = data.short_split_id;
-    const remote_file_name = record_recognition.get_remote_file_name_raw(event_id, role, speech_id, short_split_id);
-    var remoteWriteStream = bucket_raw.file(remote_file_name).createWriteStream();
-    remoteWriteStream.on('finish', ()=>{
-      console.log("remoteWriteStream close", data.short_split_id)
-    })
-    stream.pipe(remoteWriteStream);
-    record_recognition.save_startdata(data);
-
-    stream.on('end', ()=>{
-      console.log("stream end", data.short_split_id)
-    })
-
+    record_recognition.record_start_or_resume(stream, data);
 
     console.log("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
     loggerRequest.info("<<socket: record_start_or_resume>>audio record start socket id=" + socket.id + " data: ", data );
+
 	});
 
 })
