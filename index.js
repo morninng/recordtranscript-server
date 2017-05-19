@@ -4,6 +4,7 @@ const path = require('path');
 const https = require('https');
 const http = require('http');
 const ss = require('socket.io-stream');
+const bodyParser = require('body-parser');
 
 const config = require('./config/mixidea.conf');
 const app = express();
@@ -26,13 +27,16 @@ const date_retrieve = require("./routes/date_retrieve");
 const record_recognition_route = require("./routes/record_recognition");
 const record_recognition_lib = require("./lib/record_recognition");
 
-app.use('/translate', translate);
 app.use('/client_log', client_log);
 app.use('/date_retrieve', date_retrieve);
 app.use('/record_recognition', record_recognition_route);
 
 const loggerRequest = require("./lib/logger");
 
+
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
+app.use('/translate', translate);
 
 //const serverPort = 3000;
 const serverPort = 80;

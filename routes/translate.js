@@ -34,4 +34,45 @@ router.get('/', function(req, res, next) {
 });
 
 
+
+router.get('/from_jp_to_en', function(req, res, next) {
+  console.log("translation is called");
+  const querystring = req.query;
+  if(!querystring || !querystring.text){
+    res.status(200).send("input is not proper");
+    return;
+  }
+
+  console.log(querystring.text);
+  googleTranslate.translate(querystring.text, 'en', (err, translation)=>{
+
+    console.log(translation.translatedText);
+//    res.header('Access-Control-Allow-Origin', '*');
+    res.status(200).send(translation.translatedText);
+  })
+
+});
+
+
+
+router.post('/from_jp_to_en', function(req, res, next) {
+
+  console.log("translation is called");
+  console.log(req.body);
+  if(!req.body || !req.body.content){
+    res.status(200).send("there is no context to translate");
+    return;
+  }
+
+  console.log(req.body.content);
+  googleTranslate.translate(req.body.content, 'en', (err, translation)=>{
+
+    console.log(translation.translatedText);
+    res.status(200).send(translation.translatedText);
+  })
+
+});
+
+
+
 module.exports = router;
