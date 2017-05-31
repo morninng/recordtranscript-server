@@ -33,3 +33,6 @@ https://cloud.google.com/storage/docs/access-control/create-manage-lists#storage
 gsutil defacl get gs://mixidea-audio-used
 公開設定にする。
 gsutil defacl ch -u AllUsers:R gs://mixidea-audio-used
+
+
+ tsc --module commonjs notification.ts  --target ES6

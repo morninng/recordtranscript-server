@@ -1,6 +1,7 @@
 
 
-const record_recognition_lib = require("./../lib/record_recognition");
+const RecordRecognition = require("./../lib/record_recognition");
+const record_recognition_lib = new RecordRecognition();
 
 var express = require('express');
 var router = express.Router();
