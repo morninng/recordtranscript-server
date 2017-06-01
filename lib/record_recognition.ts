@@ -11,6 +11,7 @@ import * as mkdirp from 'mkdirp';
 import * as fs from 'fs';
 import * as firebase_admin from 'firebase-admin';
 import * as GCS from '@google-cloud/storage';
+import * as Speech from '@google-cloud/speech';
 
 import {RecordServerrecognitionObj} from './../interface/record-data';
 
@@ -245,7 +246,8 @@ export class RecordRecognition{
 
     private execute_recognition = (data : RecordServerrecognitionObj) => {
 
-        const sample_rate = data.sample_rate || 44100;
+        const sampleRateHertz = data.sample_rate || 44100;
+        const languageCode = data.languageCode || 'en-US';
         const event_id = data.event_id;
         const role = data.role;
         const speech_id = data.speech_id;
@@ -253,7 +255,7 @@ export class RecordRecognition{
         console.log("finish waiting and start recognition of short split id", short_split_id);
         loggerRequest.info("finish waiting and start recognition of short split id", short_split_id);
         const gcsUri = this.get_remote_file_path_raw(event_id, role, speech_id, short_split_id);
-        this.asyncRecognizeGCS(gcsUri ,'LINEAR16',  sample_rate, data);
+        this.asyncRecognizeGCS(gcsUri ,'LINEAR16',  sampleRateHertz,languageCode , data);
 
     }
 
@@ -264,7 +266,7 @@ export class RecordRecognition{
     // sample is here.
     // https://github.com/GoogleCloudPlatform/nodejs-docs-samples/tree/master/speech
 
-    private asyncRecognizeGCS = (gcsUri, encoding, sampleRate, data : RecordServerrecognitionObj) => {
+    private asyncRecognizeGCS = (gcsUri, encoding, sampleRateHertz, languageCode, data : RecordServerrecognitionObj) => {
 
 
         const speech_id = data.speech_id;
@@ -274,7 +276,8 @@ export class RecordRecognition{
         const speech = Speech();
         const request = {
             encoding: encoding,
-            sampleRate: sampleRate
+            sampleRateHertz: sampleRateHertz,
+            languageCode: languageCode
         };
         console.log("recognition request parameter", request);
         loggerRequest.info("recognition request parameter", request);
@@ -287,12 +290,13 @@ export class RecordRecognition{
             return operation.promise();
             })
             .then((transcription) => {
-            console.log(`Transcription: ${transcription}`);
-            loggerRequest.info(`Transcription: ${transcription}`);
-            if(transcription && transcription[0]){
-                this.save_transcription(transcription[0], data);
-            }
-            
+                console.log(`Transcription: ${transcription}`);
+                loggerRequest.info(`Transcription: ${transcription}`);
+                if(transcription && transcription[0]){
+                    this.save_transcription(transcription[0], data);
+                }
+            }).catch((err)=>{
+                console.log("speech recognition failed",err)
             });
     }
 

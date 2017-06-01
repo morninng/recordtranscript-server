@@ -10,5 +10,6 @@ export interface RecordServerrecognitionObj {
       record_end_type?: string;
       each_speech_duration?: number;
       whole_speech_duration?: number;
+      languageCode?: string;
 }
 

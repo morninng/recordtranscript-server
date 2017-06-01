@@ -22,19 +22,18 @@ app.use(function(req, res, next) {
 });
 
 
+const firebase_admin = require("firebase-admin");
 /* commercial */
-        // firebase_admin.initializeApp({
-        //     credential: firebase_admin.credential.cert("secret/mixidea-91a20-firebase-adminsdk.json"),
-        //     databaseURL: "https://mixidea-91a20.firebaseio.com"
-        // });
+firebase_admin.initializeApp({
+    credential: firebase_admin.credential.cert("secret/mixidea-91a20-firebase-adminsdk.json"),
+    databaseURL: "https://mixidea-91a20.firebaseio.com"
+});
 
 /* test */
-
-const firebase_admin = require("firebase-admin");
-firebase_admin.initializeApp({
-    credential: firebase_admin.credential.cert('secret/mixidea-test-a2f1f-firebase-adminsdk.json'),
-    databaseURL: "https://mixidea-test-a2f1f.firebaseio.com"
-});
+// firebase_admin.initializeApp({
+//     credential: firebase_admin.credential.cert('secret/mixidea-test-a2f1f-firebase-adminsdk.json'),
+//     databaseURL: "https://mixidea-test-a2f1f.firebaseio.com"
+// });
 
 
 
@@ -56,13 +55,13 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use('/translate', translate);
 
-const serverPort = 3000;
-//const serverPort = 80;
-const serverHost = "127.0.0.1";
+// const serverPort = 3000;
+const serverPort = 80;
+//const serverHost = "127.0.0.1";
 
 const httpServer = http.createServer(app);
- const server = httpServer.listen(serverPort,  serverHost, ()=> {
-// const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
+// const server = httpServer.listen(serverPort,  serverHost, ()=> {
+ const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
   var host = server.address().address;
   var port = server.address().port;
   console.log('Example app listening at http://%s:%s', host, port);
