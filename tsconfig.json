@@ -1,0 +1,10 @@
+{
+    "files": [],
+    "compilerOptions": {
+        "module":"commonjs",
+        "target": "ES6",
+        "typeRoots": [
+            "node_modules/@types"
+        ]
+    }
+}

@@ -9,12 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/speech": "^0.8.0",
-    "@google-cloud/storage": "^1.0.0",
+    "@google-cloud/speech": "^0.9.2",
+    "@google-cloud/storage": "^1.1.1",
     "body-parser": "^1.17.2",
     "csv-write-stream": "^2.0.0",
     "express": "^4.15.2",
-    "firebase-admin": "^4.1.4",
+    "firebase-admin": "^5.0.0",
     "fs": "0.0.1-security",
     "google-translate": "^2.0.4",
     "log4js": "^1.1.1",
@@ -26,5 +26,11 @@
     "useragent": "^2.1.13",
     "wav": "^1.0.1",
     "wav-file-info": "0.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.22",
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^3.1.7",
+    "typescript": "^2.3.4"
   }
 }
