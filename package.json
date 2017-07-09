@@ -19,7 +19,7 @@
     "google-translate": "^2.0.4",
     "log4js": "^1.1.1",
     "mkdirp": "^0.5.1",
-    "socket.io": "^1.7.3",
+    "socket.io": "^2.0.2",
     "socket.io-stream": "^0.9.1",
     "sox": "^0.1.0",
     "sox-audio": "^0.3.0",

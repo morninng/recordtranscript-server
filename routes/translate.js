@@ -74,5 +74,24 @@ router.post('/from_jp_to_en', function(req, res, next) {
 });
 
 
+router.post('/from_en_to_jp', function(req, res, next) {
+
+  console.log("translation is called");
+  console.log(req.body);
+  if(!req.body || !req.body.content){
+    res.status(200).send("there is no context to translate");
+    return;
+  }
+
+  console.log(req.body.content);
+  googleTranslate.translate(req.body.content, 'ja', (err, translation)=>{
+
+    console.log(translation.translatedText);
+    res.status(200).send(translation.translatedText);
+  })
+
+});
+
+
 
 module.exports = router;
