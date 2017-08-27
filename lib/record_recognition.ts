@@ -83,7 +83,12 @@ export class RecordRecognition{
         remoteWriteStream.on('finish', ()=>{
             console.log("---remoteWriteStream finish---", event_id  + "__" +   short_split_id);
             loggerRequest.info("---remoteWriteStream finish---", event_id  + "__" +   short_split_id);
-            this.execute_recognition(data);
+            setTimeout(
+                ()=>{
+                    this.execute_recognition(data);
+                }, 30*1000
+            )
+
         })
 
     }
@@ -156,7 +161,7 @@ export class RecordRecognition{
             sample_rate
         }
 
-        const shortsplitid_path = this.get_firebasepath_shortsplitid(event_id, deb_style, role, speech_id, short_split_id)
+        const shortsplitid_path = this.get_firebasepath_shortsplitid_2(event_id, deb_style, role, speech_id, short_split_id)
             console.log(shortsplitid_path);
         loggerRequest.info(shortsplitid_path);
 
@@ -210,41 +215,42 @@ export class RecordRecognition{
     }
 
 
-    private get_firebasepath_speechcontext = (event_id, deb_style, role, speech_id) => {
-        return "event_related/audio_transcriptserver/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/spech_context/"
+    private get_firebasepath_speechcontext_2 = (event_id, deb_style, role, speech_id) => {
+        return "event_related/audio_transcriptserver_2/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/spech_context/"
     }
 
-    private get_firebasepath_audio = (event_id, deb_style, role, speech_id) => {
-        return "event_related/audio_transcriptserver/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/audio/"
+    private get_firebasepath_audio_2 = (event_id, deb_style, role, speech_id) => {
+        return "event_related/audio_transcriptserver_2/" + event_id +"/" + deb_style  + "/" + role + "/" + speech_id + "/audio/"
     }
 
-    private get_firebasepath_shortsplitid = (event_id, deb_style, role, speech_id, short_split_id) => {
+    private get_firebasepath_shortsplitid_2 = (event_id, deb_style, role, speech_id, short_split_id) => {
 
-        const speechcontext_path = this.get_firebasepath_speechcontext(event_id, deb_style, role, speech_id);
+        const speechcontext_path = this.get_firebasepath_speechcontext_2(event_id, deb_style, role, speech_id);
         return speechcontext_path + short_split_id + "/";
     }
 
     private get_firebasepath_duration_wav = (event_id, deb_style, role, speech_id, short_split_id) => {
 
-        const shortsplitid_path = this.get_firebasepath_shortsplitid(event_id, deb_style, role, speech_id, short_split_id)
+        const shortsplitid_path = this.get_firebasepath_shortsplitid_2(event_id, deb_style, role, speech_id, short_split_id)
         return shortsplitid_path + "duration_wav";
     }
 
     private get_firebasepath_durationclient = (event_id, deb_style, role, speech_id, short_split_id) => {
 
-        const shortsplitid_path = this.get_firebasepath_shortsplitid(event_id, deb_style, role, speech_id, short_split_id)
+        const shortsplitid_path = this.get_firebasepath_shortsplitid_2(event_id, deb_style, role, speech_id, short_split_id)
         return shortsplitid_path + "duration_client";
     }
 
-    private get_firebasepath_transcriptcontext = (event_id, deb_style, role, speech_id, short_split_id) => {
+    private get_firebasepath_transcriptcontext_2 = (event_id, deb_style, role, speech_id, short_split_id) => {
 
-        const shortsplitid_path = this.get_firebasepath_shortsplitid(event_id, deb_style, role, speech_id, short_split_id)
+        const shortsplitid_path = this.get_firebasepath_shortsplitid_2(event_id, deb_style, role, speech_id, short_split_id)
         return shortsplitid_path + "context";
     }
 
 
 
     private execute_recognition = (data : RecordServerrecognitionObj) => {
+        console.log("execute_recognition");
 
         const sampleRateHertz = data.sample_rate || 44100;
         const languageCode = data.languageCode || 'en-US';
@@ -275,25 +281,43 @@ export class RecordRecognition{
         const Speech = require('@google-cloud/speech');
         const speech = Speech();
         const request = {
+            config: {
+                encoding: encoding,
+                sampleRateHertz: sampleRateHertz,
+                languageCode: languageCode,
+                enableWordTimeOffsets: true
+            },
+            audio:{
+                uri: gcsUri
+            }
+        }
+        /*
+        const config = {
             encoding: encoding,
             sampleRateHertz: sampleRateHertz,
-            languageCode: languageCode
-        };
+            languageCode: languageCode,
+            enableWordTimeOffsets: true
+        };*/
         console.log("recognition request parameter", request);
         loggerRequest.info("recognition request parameter", request);
-        console.log("recognition request url", gcsUri);
-        loggerRequest.info("recognition request url", gcsUri);
 
-        speech.startRecognition(gcsUri, request)
+        speech.longRunningRecognize(request)
             .then((results) => {
             const operation = results[0];
             return operation.promise();
             })
-            .then((transcription) => {
-                console.log(`Transcription: ${transcription}`);
-                loggerRequest.info(`Transcription: ${transcription}`);
-                if(transcription && transcription[0]){
-                    this.save_transcription(transcription[0], data);
+            .then((results) => {
+                console.dir("transcription results,results", JSON.stringify(results, null, 2));
+                loggerRequest.info("transcription results:", JSON.stringify(results, null, 2));
+                if (results && results[0] && results[0].results && results[0].results[0] && results[0].results[0].alternatives) {
+
+
+                    const all_transcript = results[0].results;
+                    console.log(all_transcript)
+                    const first_transcript = results[0].results[0].alternatives[0]
+                    console.log(first_transcript);
+
+                    this.save_transcription_2(all_transcript, data);
                 }
             }).catch((err)=>{
                 console.log("speech recognition failed",err)
@@ -302,7 +326,7 @@ export class RecordRecognition{
 
 
 
-    private save_transcription = (transcription, data : RecordServerrecognitionObj) => {
+    private save_transcription_2 = (transcription, data : RecordServerrecognitionObj) => {
         console.log("save_transcription");
         loggerRequest.info("save_transcription");
 
@@ -314,7 +338,7 @@ export class RecordRecognition{
 
 
 
-        const transcriptcontext_path = this.get_firebasepath_transcriptcontext(event_id, deb_style, role, speech_id, short_split_id)
+        const transcriptcontext_path = this.get_firebasepath_transcriptcontext_2(event_id, deb_style, role, speech_id, short_split_id)
             console.log(transcriptcontext_path);
         loggerRequest.info(transcriptcontext_path);
 
@@ -342,14 +366,14 @@ export class RecordRecognition{
         const dirname = this.get_local_folder(event_id)
         mkdirp(dirname, (err)=>{console.log("folder created")});
 
-        const speechcontext_path = this.get_firebasepath_speechcontext(event_id, deb_style, role, speech_id);
+        const speechcontext_path = this.get_firebasepath_speechcontext_2(event_id, deb_style, role, speech_id);
         console.log("speechcontext_path", speechcontext_path);
         loggerRequest.info("speechcontext_path", speechcontext_path);
 
         const database = firebase_admin.database();
         database.ref(speechcontext_path).once("value", (snapshot) => {
-        console.log("audio_transcriptserver", snapshot.val());
-        loggerRequest.info("audio_transcriptserver", snapshot.val());
+        console.log("audio_transcriptserver_2", snapshot.val());
+        loggerRequest.info("audio_transcriptserver_2", snapshot.val());
         const audiotranscript_obj = snapshot.val();
         let numbe_of_speech = 0;
         let speech_downloaded = 0;
@@ -555,7 +579,7 @@ export class RecordRecognition{
         const storage_url = this.get_remote_file_name_used_storageurl(event_id, role, speech_id);
         console.log(storage_url);
         loggerRequest.info(storage_url);
-        const audio_path = this.get_firebasepath_audio(event_id, deb_style, role, speech_id)
+        const audio_path = this.get_firebasepath_audio_2(event_id, deb_style, role, speech_id)
         console.log(audio_path);
         loggerRequest.info(audio_path);
 

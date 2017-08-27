@@ -10,8 +10,13 @@ const config = require('./config/mixidea.conf');
 const app = express();
 
 app.get('/', (req, res)=> {
-  console.log('root is called'); 
+//  console.log('root is called'); 
   res.send('Hello World recording server!');
+});
+
+app.get('/test', (req, res)=> {
+  console.log('test is called'); 
+  res.send('test recording server!');
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -44,6 +49,17 @@ const record_recognition_route = require("./routes/record_recognition");
 const RecordRecognition = require("./lib/record_recognition");
 const record_recognition_lib = new RecordRecognition();
 
+const RecognitionTest = require("./lib/recognition_test");
+const recog_test_lib = new RecognitionTest();
+
+app.get('/test_record', (req, res)=> {
+  recog_test_lib.test();
+  res.send('test recording server!');
+});
+
+
+
+
 app.use('/client_log', client_log);
 app.use('/date_retrieve', date_retrieve);
 app.use('/record_recognition', record_recognition_route);
@@ -56,12 +72,12 @@ app.use(bodyParser.json());
 app.use('/translate', translate);
 
 // const serverPort = 3000;
-const serverPort = 80;
+ const serverPort = 80;
 //const serverHost = "127.0.0.1";
 
 const httpServer = http.createServer(app);
 // const server = httpServer.listen(serverPort,  serverHost, ()=> {
- const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
+  const server = httpServer.listen(serverPort, /* serverHost,*/ ()=> {
   var host = server.address().address;
   var port = server.address().port;
   console.log('Example app listening at http://%s:%s', host, port);

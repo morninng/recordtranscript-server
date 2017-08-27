@@ -27,7 +27,7 @@ router.get('/reflesh', function (req, res) {
 
 
 router.get('/', function(req, res, next) {
-    console.log("log is called");
+//    console.log("log is called");
     const query_obj = req.query;
     if(!global_logger){
         global_logger = csvWriter(csv_writer_option);
