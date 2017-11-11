@@ -9,7 +9,7 @@ var router = express.Router();
 /* GET users listing. */
 
 const csv_writer_option =  {
-    headers:["level","user_name","file_name",'message','type',"server_time","client_time","event_id","user_id","tech",'module','element','send_type','browser','useragent'],
+    headers:["level","user_name","file_name",'message','type',"server_time","client_time","event_id","user_id","tech",'module','element','send_type','browser','useragent','trace'],
     separator: '\t'}
 let global_logger = null;
 
@@ -54,8 +54,7 @@ router.get('/', function(req, res, next) {
     }
 
     global_logger.write(query_obj)
-    res.header({"Access-Control-Allow-Origin":"*"})
-    res.sendStatus(200);
+    res.header({"Access-Control-Allow-Origin":"*"}).json({log:'yes'});
 });
 
 
