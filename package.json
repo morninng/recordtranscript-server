@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./node_modules/.bin/tsc"
   },
   "author": "",
   "license": "ISC",
@@ -23,7 +24,7 @@
     "socket.io-stream": "^0.9.1",
     "sox": "^0.1.0",
     "sox-audio": "^0.3.0",
-    "useragent": "^2.1.13",
+    "useragent": "^2.3.0",
     "wav": "^1.0.1",
     "wav-file-info": "0.0.8"
   },

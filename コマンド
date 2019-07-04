@@ -7,6 +7,8 @@ ssh -i "/home/morninng/.ssh/mixidea_key.pem" ubuntu@ec2-34-205-225-82.compute-1.
 recordtranscript server2
 ssh -i "/home/morninng/.ssh/mixidea_key.pem" ubuntu@ec2-34-207-94-124.compute-1.amazonaws.com
 
+recordtranscript server2 from mac
+ssh -i "~/.ssh/mixidea_key.pem" ubuntu@ec2-34-207-94-124.compute-1.amazonaws.com
 
 
 
@@ -15,6 +17,7 @@ sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_
 sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='public/log/*'  --exclude='**.wav'  --exclude='**.raw' --exclude='**.mp3'  /home/morninng/development/nodejs/recordtranscript-server/* ubuntu@ec2-34-205-225-82.compute-1.amazonaws.com:/home/ubuntu/source
 sudo rsync -avz -e "ssh -i /home/morninng/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='public/log/*'  --exclude='**.wav'  --exclude='**.raw' --exclude='**.mp3'  /home/morninng/development/nodejs/recordtranscript-server/* ubuntu@ec2-34-207-94-124.compute-1.amazonaws.com:/home/ubuntu/source
 
+sudo rsync -avz -e "ssh -i ~/.ssh/mixidea_key.pem" --exclude='node_modules/*' --exclude='public/log/*'   ~/development/node/recordtranscript-server/* ubuntu@ec2-34-207-94-124.compute-1.amazonaws.com:/home/ubuntu/source
 
 
 sudo apt-get install sox
@@ -92,7 +95,9 @@ https://developers.google.com/identity/protocols/application-default-credentials
 
 
 
-
+sudo su
+ foreer list
+ forever stop 0
  forever start index.js -o /home/ubuntu/source/public/log/forever_out.txt -e /home/ubuntu/source/public/log/forever_err.txt  -l  /home/ubuntu/source/public/log/forever_log.txt
 
  https://recordingtranscription2.mixidea.org/log/forever_out.txt

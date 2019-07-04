@@ -6,56 +6,34 @@ const csvWriter = require('csv-write-stream')
 const useragent = require('useragent');
 var router = express.Router();
 
+const CsvLogger = require("../lib/csv-logger");
+
 /* GET users listing. */
 
-const csv_writer_option =  {
-    headers:["level","user_name","file_name",'message','type',"server_time","client_time","event_id","user_id","tech",'module','element','send_type','browser','useragent','trace'],
-    separator: '\t'}
-let global_logger = null;
 
 router.get('/log_test', function (req, res) {
+  console.log('log_test')
     res.send('log server confirmation');
 })
 
 router.get('/reflesh', function (req, res) {
-    global_logger = csvWriter(csv_writer_option);
-    global_logger.pipe(fs.createWriteStream('./public/log/client_log.txt'));
-    res.send('csv data has been refleshed');
+  const csv_logger = CsvLogger.instance;
+  csv_logger.reflesh();
+  res.send('csv data has been refleshed');
 })
-
-
 
 
 router.get('/', function(req, res, next) {
 //    console.log("log is called");
     const query_obj = req.query;
-    if(!global_logger){
-        global_logger = csvWriter(csv_writer_option);
-        global_logger.pipe(fs.createWriteStream('./public/log/client_log.txt'));
-    }
-
-    // if(query_obj['timestamp']){
-    //     const timestamp = new Date(query_obj['timestamp']);
-    //     query_obj['timestamp'] = timestamp.toISOString();
-    // }
 
     var agent = useragent.parse(req.headers['user-agent']);
-    query_obj['useragent'] = req.headers['user-agent']
-    query_obj['browser'] = agent.toAgent();
-    query_obj['server_time'] = new Date().toUTCString();
-
-    for(let key in query_obj){
-        query_obj[key] = query_obj[key].replace(/\t/g,'');
-        query_obj[key] = query_obj[key].replace(/ ,/g,'');
-        query_obj[key] = query_obj[key].replace(/, /g,'');
-        query_obj[key] = query_obj[key].replace(/"/g,'');
-        query_obj[key] = query_obj[key].replace(/'/g,'');
-        query_obj[key] = "\"" + query_obj[key] + "\"";
-    }
-
-    global_logger.write(query_obj)
+    const _user_agent = req.headers['user-agent']
+    const browser= agent.toAgent();
+    
+    const csv_logger = CsvLogger.instance;
+    csv_logger.write(query_obj, browser, _user_agent);
     res.header({"Access-Control-Allow-Origin":"*"}).json({log:'yes'});
 });
-
 
 module.exports = router;
