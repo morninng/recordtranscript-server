@@ -22,6 +22,15 @@ router.get('/reflesh', function (req, res) {
   res.send('csv data has been refleshed');
 })
 
+router.get('/user-agent', function (req, res) {
+  const _user_agent = req.headers['user-agent']
+
+  res.send(_user_agent);
+
+})
+
+
+
 
 router.get('/', function(req, res, next) {
 //    console.log("log is called");
