@@ -10,26 +10,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/speech": "^0.10.2",
-    "@google-cloud/storage": "^1.2.1",
+    "axios": "^0.20.0",
     "body-parser": "^1.17.2",
     "csv-write-stream": "^2.0.0",
-    "express": "^4.15.2",
-    "firebase-admin": "^5.0.0",
+    "express": "^4.17.1",
+    "firebase-admin": "^9.2.0",
     "fs": "0.0.1-security",
-    "google-translate": "^2.0.4",
-    "log4js": "^1.1.1",
-    "mkdirp": "^0.5.1",
-    "socket.io": "^2.0.2",
-    "socket.io-stream": "^0.9.1",
-    "sox": "^0.1.0",
-    "sox-audio": "^0.3.0",
-    "useragent": "^2.3.0",
-    "wav": "^1.0.1",
-    "wav-file-info": "0.0.8"
+    "mkdirp": "^0.5.5",
+    "useragent": "^2.3.0"
   },
   "devDependencies": {
-    "@types/node": "^7.0.22",
+    "@types/node": "^7.10.13",
     "gulp": "^3.9.1",
     "gulp-typescript": "^3.1.7",
     "typescript": "^2.3.4"
